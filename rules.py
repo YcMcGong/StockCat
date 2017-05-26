@@ -30,6 +30,7 @@ class Rules():
         percent_change = float(self.last_percent)-float(self.percent)
         if float(percent_change)>=self.rapid_lose_threshold:
             message = 'Rapid Losing Info:\t' + self.name + '\tPercent_change:\t' + str(percent_change) + '\tCurrent_change\t' + self.percent
+            self.send(message)
         pass
 
     # def __rule_detect_news(self):

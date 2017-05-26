@@ -10,7 +10,7 @@ from rules import Rules
 class Stock(Rules):
     
     # Init the stock name
-    def __init__(self, name: str, slack):
+    def __init__(self, name: str, slack, subscribe_channels):
         self.name = name
         self.init__function_related()
         self.price, self.percent = self.get_price_and_percent()
@@ -18,6 +18,7 @@ class Stock(Rules):
         self.slack = slack
         self.last_price = self.price
         self.last_percent = self.percent
+        self.subscribe_channels = subscribe_channels
         # self.last_title = self.news_titles[0]
 
     # Method to return price and pecentage
@@ -48,7 +49,8 @@ class Stock(Rules):
         # self.news_titles, self.news_links = self.get_news()
 
     def send(self, message):
-        self.slack.chat.post_message('#general', message)
+        for channel in self.subscribe_channels:
+            self.slack.chat.post_message(channel, message)
     
     # The function to check all rules and updates
     def run(self):
@@ -59,7 +61,7 @@ class Stock(Rules):
 
 class StockPool():
     
-    def __init__(self, watch_list, buying_price, init_change):
+    def __init__(self, watch_list, buying_price, init_change, private_list):
         self.slack = self.init_slack_bot()
         self.watch_list = watch_list
         self.buying_price = buying_price
@@ -68,12 +70,17 @@ class StockPool():
         self.stock_change = init_change
         self.stock_list = []
         for st in watch_list:
-            self.stock_list.append(Stock(st, self.slack))
+            # For each stock, create a list of subscribed channels
+            subscribe_channels = []
+            for private_channel in private_list:
+                if (st in private_list[private_channel]):
+                    subscribe_channels.append(private_channel)
+            self.stock_list.append(Stock(st, self.slack, subscribe_channels))
 
     def init_slack_bot(self):
 	# Token and url are hidden for security purpose
 	# Once updated and tested admin will add the new code to the server using real token
-        slack = Slacker('token',incoming_webhook_url='url') 
+        slack = Slacker('token',incoming_webhook_url='url')
         return slack
 
     def run(self):
